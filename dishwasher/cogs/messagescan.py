@@ -60,7 +60,7 @@ class Messagescan(Cog):
 
             rcvguild = self.bot.get_guild(guildid)
             rcvchannel = rcvguild.get_channel_or_thread(channelid)
-            rcvmessage = await rcvchannel.fetch_message(msgid)
+            rcvmessage: discord.Message = await rcvchannel.fetch_message(msgid)
 
             # Prepare embed msg
             embed = discord.Embed(
@@ -75,6 +75,22 @@ class Messagescan(Cog):
                 name=f"💬 {rcvmessage.author.name}#{rcvmessage.author.discriminator} said in #{rcvmessage.channel.name}...",
                 icon_url=f"{rcvmessage.author.display_avatar.url}",
             )
+
+            number_of_attachments = len(rcvmessage.attachments)
+
+            if number_of_attachments == 1 and rcvmessage.attachments[0].content_type.startswith("image/"):
+                embed.set_image(url=rcvmessage.attachments[0].url)
+            elif number_of_attachments > 1:
+                attachments_str = ""
+                for i in range(0, 4 if number_of_attachments > 4 else number_of_attachments):
+                    attachments_str += f"- [{rcvmessage.attachments[i].filename}]({rcvmessage.attachments[i].url})\n"
+
+                # despite being comprised entirely of hyperlinks, it's quite easy to hit the field character limit of 1024 with more than like 4 links
+                # so just truncate the list of attachments if there are more than 4
+                remaining_attachments = number_of_attachments - 4
+
+                embed.add_field(name=f"Attachments{' (' + str(number_of_attachments - 4) + ' not included)' if remaining_attachments > 0 else ''}", value=attachments_str, inline=False)
+
             embeds.append(embed)
         await message.reply(embeds=embeds, mention_author=False)
 
