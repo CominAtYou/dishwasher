@@ -188,17 +188,10 @@ class Messagescan(Cog):
             return
 
         msglinks = self.link_re.findall(message.content)
-        twitterlinks = self.twitterlink_re.findall(message.content)
-        if not msglinks and not twitterlinks:
+        if not msglinks:
             return
         tlinks = None
         embeds = None
-
-        if twitterlinks:
-            tlinks = []
-            for t in twitterlinks:
-                tlinks.append(t[:8] + "vx" + t[8:])
-            tlinks = "\n".join(tlinks)
 
         if msglinks:
             embeds = []
@@ -239,16 +232,6 @@ class Messagescan(Cog):
                 elif rcvmessage.stickers:
                     embed.set_image(url=rcvmessage.stickers[0].url)
                 embeds.append(embed)
-
-        if (
-            message.guild
-            and message.channel.permissions_for(message.guild.me).manage_messages
-        ):
-            # Discord SUCKS!!
-            if twitterlinks:
-                while not message.embeds:
-                    await asyncio.sleep(0.1)
-            await message.edit(suppress=True)
 
         def deletecheck(m):
             return m.id == message.id
